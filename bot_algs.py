@@ -72,7 +72,7 @@ def mhandler(message,db,cursor,bot):
 def gparse(sear):
     URL = f'http://www.google.ru/search?hl=ru&num=100&q={sear}&start=1'
     HEADERS = {
-        'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:88.0) Gecko/20100101 Firefox/88.0'
+        'User-Agent': '-'
     }
 
     response = requests.get(URL, headers = HEADERS)
