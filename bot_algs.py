@@ -28,7 +28,7 @@ def find_anwser(mtext):
     if answers != []:
         answer = answers[rand.randint(0,len(answers)-1)]
     else:
-        resaults = gparse(mtext)
+        resaults = searX(mtext)
         answer = "Не понял юмора, поэтому обратился к google~st3|Вот что он сказал:~nn"
         for resault in resaults:
             answer = answer + f"[{resault['title']}]({resault['link']})~md)"
@@ -72,25 +72,25 @@ async def mhandler(message,db,cursor,bot):
     await msender(answer,bot,message.chat.id)
 
 
+def searX(sear):
 
-def gparse(sear):
-    URL = f'http://www.google.ru/search?hl=ru&num=100&q={sear}&start=1'
+    URL = f'https://searx.roughs.ru/search?q={sear}'
     HEADERS = {
         'User-Agent': config.user_agent
     }
 
     response = requests.get(URL, headers = HEADERS)
     soup = bs(response.content, 'html.parser')
-    items = soup.findAll('div',class_ = 'yuRUbf')
+    items = soup.findAll('h4',class_ = 'result_header')
     resaults = []
 
     for item in items[slice(0,6)]:
-        title = item.find('h3', class_ = 'LC20lb DKV0Md')
+        result = item.find('a')
 
-        if title != None:
+        if result != None:
             resaults.append({
-                'title': title.get_text(strip = True),
-                'link': item.find('a').get('href')
+                'title': result.get_text(strip = True),
+                'link': result.get('href')
             })
 
     return resaults
