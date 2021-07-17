@@ -2,6 +2,8 @@ import dictionary
 import random as rand
 import requests
 
+import config
+
 from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
 from bs4 import BeautifulSoup as bs
@@ -9,7 +11,7 @@ from bs4 import BeautifulSoup as bs
 def CTWL (text, key_word_list):#CTWL-check text with list
     flag=False
     for i in key_word_list :
-        if fuzz.partial_ratio(i, text)>=70:
+        if fuzz.partial_ratio(i, text)>=70 and len(text)>=len(i)-3:
             flag=True
     return flag
 
@@ -33,7 +35,7 @@ def find_anwser(mtext):
 
     return answer
 
-def msender(mtext,bot,id):
+async def msender(mtext,bot,id):
 
     POT = mtext.find("~")
     while POT!=-1:#POT-place of teg
@@ -41,23 +43,25 @@ def msender(mtext,bot,id):
         teg=mtext[slice(POT+1,POT+3)]
 
         if teg=="nn":
-            bot.send_message(id,mtext[slice(0,POT)])
+            await bot.send_message(id,mtext[slice(0,POT)])
             mtext=mtext[slice(POT+3,len(mtext))]
         elif teg=="st":
             POE=mtext.find("|")#POE-place of end
             stinum=int(mtext[slice(POT+3,POE)])-1
-            bot.send_message(id,mtext[slice(0,POT)])
+            await bot.send_message(id,mtext[slice(0,POT)])
             mtext=mtext[slice(POE+1,len(mtext))]
-            bot.send_sticker(id,open(dictionary.stickers[stinum],'rb'))
+            await bot.send_sticker(id,open(dictionary.stickers[stinum],'rb'))
         elif teg=="md":
-            bot.send_message(id,mtext[slice(0,POT)], parse_mode='Markdown')
+            await bot.send_message(id,mtext[slice(0,POT)], parse_mode='Markdown',  disable_web_page_preview = True)
             mtext=mtext[slice(POT+4,len(mtext))]
 
         POT=mtext.find("~")
-    bot.send_message(id,mtext)
+
+    if mtext!='':
+        await bot.send_message(id,mtext)
 
 
-def mhandler(message,db,cursor,bot):
+async def mhandler(message,db,cursor,bot):
     cursor.execute(f"SELECT id FROM users WHERE id = {message.from_user.id}")
     if cursor.fetchone == None:
         cursor.execute("INSERT INTO users VALUES (?)",(message.from_user.id))
@@ -65,14 +69,14 @@ def mhandler(message,db,cursor,bot):
 
     mtext=message.text.lower()
     answer=find_anwser(mtext)
-    msender(answer,bot,message.chat.id)
+    await msender(answer,bot,message.chat.id)
 
 
 
 def gparse(sear):
     URL = f'http://www.google.ru/search?hl=ru&num=100&q={sear}&start=1'
     HEADERS = {
-        'User-Agent': '-'
+        'User-Agent': config.user_agent
     }
 
     response = requests.get(URL, headers = HEADERS)
@@ -80,7 +84,7 @@ def gparse(sear):
     items = soup.findAll('div',class_ = 'yuRUbf')
     resaults = []
 
-    for item in items[slice(0,3)]:
+    for item in items[slice(0,6)]:
         title = item.find('h3', class_ = 'LC20lb DKV0Md')
 
         if title != None:
